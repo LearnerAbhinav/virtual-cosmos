@@ -79,14 +79,17 @@ export const Sidebar = () => {
              ))}
              <div ref={endRef} />
           </div>
-          <form onSubmit={sendMsg} className="p-3 bg-white border-t border-zinc-200">
+          <form onSubmit={sendMsg} className="p-3 bg-white border-t border-zinc-200 flex gap-2">
              <input 
                type="text" 
-               className="w-full bg-zinc-100 border-none rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-indigo-500 outline-none" 
+               className="flex-1 bg-zinc-100 border-none rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-indigo-500 outline-none" 
                placeholder="Message everyone..." 
                value={msg}
                onChange={e => setMsg(e.target.value)}
              />
+             <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 rounded-lg flex items-center justify-center transition-colors">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+             </button>
           </form>
         </div>
       )}

@@ -115,8 +115,15 @@ export const WebRTCManager = {
     };
 
     pc.ontrack = (event) => {
-      const [remoteStream] = event.streams;
-      useStore.getState().addRemoteStream(peerId, remoteStream);
+      let remoteStream = useStore.getState().remoteStreams[peerId];
+      if (!remoteStream) {
+         remoteStream = new MediaStream();
+      }
+      remoteStream.addTrack(event.track);
+      
+      // Force trigger state update by constructing a brand new MediaStream object reference
+      const newStreamRef = new MediaStream(remoteStream.getTracks());
+      useStore.getState().addRemoteStream(peerId, newStreamRef);
     };
 
     pc.onconnectionstatechange = () => {

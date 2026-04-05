@@ -88,6 +88,27 @@ export const MapEngine = () => {
     setScale(s => Math.max(0.4, Math.min(3, s - e.deltaY * 0.002)));
   }
 
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handlePointerDown = (e) => {
+    // Only drag with left click or touch
+    if (e.button !== 0 && e.type !== 'touchstart') return;
+    setIsDragging(true);
+    e.target.setPointerCapture?.(e.pointerId);
+  };
+
+  const handlePointerMove = (e) => {
+    if (isDragging) {
+      setPan(p => ({ x: p.x + e.movementX, y: p.y + e.movementY }));
+    }
+  };
+
+  const handlePointerUp = (e) => {
+    setIsDragging(false);
+    e.target.releasePointerCapture?.(e.pointerId);
+  };
+
   const state = useStore.getState();
   const localPlayer = state.players[state.localId];
 
@@ -96,12 +117,16 @@ export const MapEngine = () => {
        className="absolute inset-0 bg-[#e5e7eb] overflow-hidden" 
        style={{ zIndex: 0 }}
        onWheel={handleWheel}
+       onPointerDown={handlePointerDown}
+       onPointerMove={handlePointerMove}
+       onPointerUp={handlePointerUp}
+       onPointerCancel={handlePointerUp}
     >
       <div 
         className="absolute w-full h-full"
         style={{ 
            transform: `scale(${scale})`, 
-           transformOrigin: localPlayer ? `${localPlayer.x + camera.x}px ${localPlayer.y + camera.y}px` : 'center center',
+           transformOrigin: localPlayer ? `${localPlayer.x + camera.x + pan.x}px ${localPlayer.y + camera.y + pan.y}px` : 'center center',
            transition: 'transform 0.1s ease-out'
         }}
       >
@@ -110,8 +135,10 @@ export const MapEngine = () => {
           ref={mapRef}
           className="absolute top-0 left-0"
           onClick={(e) => {
+            // Prevent Tap-to-move if we were heavily dragging the map!
+            if (isDragging) return;
+            
             const rect = mapRef.current.getBoundingClientRect();
-            // Compute real coordinates relative to the underlying 2000x2000 scaled grid
             const worldX = (e.clientX - rect.left) / scale;
             const worldY = (e.clientY - rect.top) / scale;
             const newX = Math.max(20, Math.min(2000 - 20, worldX));
@@ -119,15 +146,18 @@ export const MapEngine = () => {
             
             useStore.getState().updatePlayerTarget(localId, newX, newY);
             socket.emit('move', { x: newX, y: newY });
+            
+            // Re-center camera on tap!
+            setPan({ x: 0, y: 0 });
           }}
           style={{ 
             width: '2000px', height: '2000px', 
-            transform: `translate(${camera.x}px, ${camera.y}px)`,
+            transform: `translate(${camera.x + pan.x}px, ${camera.y + pan.y}px)`,
             willChange: 'transform',
             backgroundImage: 'url(/office_map.png)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            cursor: 'crosshair'
+            cursor: isDragging ? 'grabbing' : 'crosshair'
           }}
         >
         {/* Render interactive seats (Chairs) */}
