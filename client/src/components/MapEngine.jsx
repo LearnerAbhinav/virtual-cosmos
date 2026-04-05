@@ -1,0 +1,139 @@
+import React, { useEffect, useRef, useState } from 'react';
+import { useStore } from '../store/useStore';
+import { socket } from '../socket';
+import { PlayerAvatar } from './PlayerAvatar';
+
+const SPEED = 5;
+
+export const MapEngine = () => {
+  const mapRef = useRef(null);
+  const keys = useRef({});
+  const lastEmitTime = useRef(0);
+  
+  // React to player list changing (to render avatars)
+  const players = useStore(state => state.players);
+  const localId = useStore(state => state.localId);
+  const seats = useStore(state => state.seats);
+
+  const [camera, setCamera] = useState({ x: 0, y: 0 });
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const onKeyDown = (e) => { keys.current[e.key.toLowerCase()] = true; };
+    const onKeyUp = (e) => { keys.current[e.key.toLowerCase()] = false; };
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keyup', onKeyUp);
+
+    let frameId;
+    const loop = () => {
+      const state = useStore.getState();
+      const localPlayer = state.players[state.localId];
+
+      if (localPlayer) {
+        let dx = 0;
+        let dy = 0;
+        
+        // Block WASD if actively sitting
+        if (!localPlayer.seatId) {
+          if (keys.current['w'] || keys.current['arrowup']) dy -= SPEED;
+          if (keys.current['s'] || keys.current['arrowdown']) dy += SPEED;
+          if (keys.current['a'] || keys.current['arrowleft']) dx -= SPEED;
+          if (keys.current['d'] || keys.current['arrowright']) dx += SPEED;
+        }
+
+        if (keys.current['x'] || keys.current['e']) {
+           const now = Date.now();
+           if (!keys.current['lastInteract'] || now - keys.current['lastInteract'] > 500) {
+              keys.current['lastInteract'] = now;
+              socket.emit('interact');
+           }
+        }
+
+        // Apply movement
+        if (dx !== 0 || dy !== 0) {
+          const newX = Math.max(20, Math.min(2000 - 20, localPlayer.x + dx));
+          const newY = Math.max(20, Math.min(2000 - 20, localPlayer.y + dy));
+          
+          const now = Date.now();
+          if (now - lastEmitTime.current > 50) {
+            lastEmitTime.current = now;
+            useStore.getState().setPlayerPos(state.localId, newX, newY);
+            socket.emit('move', { x: newX, y: newY });
+          }
+        }
+
+        // Camera follow logic
+        setCamera({
+          x: window.innerWidth / 2 - localPlayer.x,
+          y: window.innerHeight / 2 - localPlayer.y
+        });
+      }
+      
+      frameId = requestAnimationFrame(loop);
+    };
+    frameId = requestAnimationFrame(loop);
+
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('keyup', onKeyUp);
+      cancelAnimationFrame(frameId);
+    };
+  }, []);
+
+  const handleWheel = (e) => {
+    // Zoom in or out based on scroll wheel
+    setScale(s => Math.max(0.4, Math.min(3, s - e.deltaY * 0.002)));
+  }
+
+  const state = useStore.getState();
+  const localPlayer = state.players[state.localId];
+
+  return (
+    <div 
+       className="absolute inset-0 bg-[#e5e7eb] overflow-hidden" 
+       style={{ zIndex: 0 }}
+       onWheel={handleWheel}
+    >
+      <div 
+        className="absolute w-full h-full"
+        style={{ 
+           transform: `scale(${scale})`, 
+           transformOrigin: localPlayer ? `${localPlayer.x + camera.x}px ${localPlayer.y + camera.y}px` : 'center center',
+           transition: 'transform 0.1s ease-out'
+        }}
+      >
+        {/* Container that pans based on Camera */}
+        <div 
+          ref={mapRef}
+          className="absolute top-0 left-0"
+          style={{ 
+            width: '2000px', height: '2000px', 
+            transform: `translate(${camera.x}px, ${camera.y}px)`,
+            willChange: 'transform',
+            backgroundImage: 'url(/office_map.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
+          }}
+        >
+        {/* Render interactive seats (Chairs) */}
+        {seats.map(s => (
+           <div 
+             key={s.id} 
+             className="absolute bg-zinc-400 border border-zinc-500 rounded-md shadow-sm flex items-center justify-center text-[8px] text-white font-bold"
+             style={{ 
+               left: s.x - 15, top: s.y - 15, width: '30px', height: '30px'
+             }}
+           >
+             X
+           </div>
+        ))}
+
+        {/* Render Players */}
+        {Object.keys(players).map(id => (
+          <PlayerAvatar key={id} id={id} />
+        ))}
+      </div>
+     </div>
+    </div>
+  );
+};

@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+@theme {
+  --color-accent: #aa3bff;
+  --color-accent-bg: rgba(170, 59, 255, 0.1);
+  --color-accent-border: rgba(170, 59, 255, 0.5);
+  
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-heading: 'Outfit', system-ui, -apple-system, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-zinc-900 text-slate-200 antialiased overflow-hidden m-0 p-0;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-zinc-900/40 backdrop-blur-md border border-zinc-700/50 shadow-xl;
+  }
+}
