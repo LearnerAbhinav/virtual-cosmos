@@ -68,7 +68,6 @@ This project fulfills and far exceeds all required assignment objectives:
 
 ## 📸 Preview
 
-*(Add your actual Desktop or Mobile screenshot here for GitHub tracking)*
 
 ![App Screenshot](./client/public/office_map.png)
 
