@@ -124,11 +124,6 @@ npm run dev
 
 ---
 
-## 📹 Demo Video
-
-*(Add your recorded WebRTC / Movement demo video link here!)*
-
----
 
 ## 👨‍💻 Author
 
