@@ -62,6 +62,10 @@ function App() {
       useStore.getState().updatePlayerHand(data.id, data.isRaised);
     }
 
+    function onReaction(data) {
+      useStore.getState().setPlayerReaction(data.id, data.emoji);
+    }
+
     // WebRTC Signaling
     function onProximityEnter(data) {
       WebRTCManager.handleProximityEnter(data.room, data.peers)
@@ -101,6 +105,7 @@ function App() {
     socket.on('player_name_updated', onPlayerNameUpdated)
     socket.on('chat_message', onChatMessage)
     socket.on('player_hand', onPlayerHand)
+    socket.on('reaction', onReaction)
     socket.on('proximity_enter', onProximityEnter)
     socket.on('proximity_exit', onProximityExit)
     socket.on('webrtc_offer', onWebRTCOffer)
@@ -118,6 +123,7 @@ function App() {
       socket.off('player_name_updated', onPlayerNameUpdated)
       socket.off('chat_message', onChatMessage)
       socket.off('player_hand', onPlayerHand)
+      socket.off('reaction', onReaction)
       socket.off('proximity_enter', onProximityEnter)
       socket.off('proximity_exit', onProximityExit)
       socket.off('webrtc_offer', onWebRTCOffer)
@@ -128,6 +134,7 @@ function App() {
 
   const [name, setName] = useState('')
   const toasts = useStore(state => state.toasts);
+  const isSidebarOpen = useStore(state => state.isSidebarOpen);
 
   const startMedia = async () => {
     if (!name.trim()) return alert('Please enter your name');
@@ -138,7 +145,7 @@ function App() {
 
   if (!hasJoined) {
     return (
-      <div className="w-full h-screen flex items-center justify-center bg-zinc-50 font-sans">
+      <div className="w-full h-screen flex items-center justify-center bg-zinc-50 font-sans p-4">
         <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full text-center border border-zinc-100">
            <div className="w-16 h-16 bg-gradient-to-tr from-purple-600 to-indigo-500 rounded-2xl mx-auto mb-6 shadow-lg shadow-purple-500/30 flex items-center justify-center text-white font-bold text-2xl">
               🚀
@@ -168,9 +175,11 @@ function App() {
   }
 
   return (
-    <div className="w-full h-screen flex font-sans overflow-hidden bg-zinc-900 relative">
-      <Sidebar />
-      <div className="flex-1 relative">
+    <div className="w-full h-[100dvh] flex font-sans overflow-hidden bg-zinc-900 relative">
+      <div className={`${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 absolute md:static z-40 h-full shadow-2xl md:shadow-none md:translate-x-0`}>
+         <Sidebar />
+      </div>
+      <div className="flex-1 relative w-full h-full">
          <MapEngine />
          <BottomNav />
       </div>

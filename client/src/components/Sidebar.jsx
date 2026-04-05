@@ -24,12 +24,14 @@ export const Sidebar = () => {
 
   return (
     <div className="w-64 bg-white h-screen border-r border-zinc-200 flex flex-col z-20 shadow-sm relative">
-      {/* Header */}
       <div className="p-4 border-b border-zinc-100 flex items-center justify-between">
          <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500"></div>
-            <h1 className="font-bold text-sm text-zinc-800">Upskill Mafia MERN</h1>
+            <h1 className="font-bold text-sm text-zinc-800">Virtual Cosmos</h1>
          </div>
+         <button onClick={() => useStore.getState().setIsSidebarOpen(false)} className="md:hidden text-zinc-400 hover:text-zinc-600">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+         </button>
       </div>
 
       <div className="flex border-b border-zinc-200">

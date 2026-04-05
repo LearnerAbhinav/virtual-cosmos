@@ -15,22 +15,20 @@ export const PlayerAvatar = ({ id }) => {
       const isLocal = state.localId === id;
       
       if (p && playerRef.current) {
+         // Smoothly interpolate towards absolute target coordinates over frames (20% of remaining distance per frame -> nice Gather.town slide)
+         currentX += ((p.targetX ?? p.x) - currentX) * 0.2;
+         currentY += ((p.targetY ?? p.y) - currentY) * 0.2;
+         
          if (isLocal) {
-            currentX = p.x;
-            currentY = p.y;
-         } else {
-            currentX += ((p.targetX || p.x) - currentX) * 0.2;
-            currentY += ((p.targetY || p.y) - currentY) * 0.2;
             useStore.getState().setPlayerPos(id, currentX, currentY);
-            
-            // Spatial Audio Distance
+         } else {
+            // Spatial Audio Distance (Only computed against remote players)
             if (videoRef.current) {
                const localPlayer = state.players[state.localId];
                if (localPlayer) {
                  const dx = localPlayer.x - currentX;
                  const dy = localPlayer.y - currentY;
                  const dist = Math.sqrt(dx*dx + dy*dy);
-                 // WebRTC rooms already cull at 200px or zones, but we smooth the volume
                  const scale = Math.max(0, 1 - (dist / 300));
                  videoRef.current.volume = scale;
                }
@@ -75,8 +73,15 @@ export const PlayerAvatar = ({ id }) => {
         
         {/* Raised Hand Indicator */}
         {p.handRaised && (
-           <div className="absolute -top-6 -right-2 text-2xl animate-bounce drop-shadow-md z-20">
+           <div className="absolute -top-6 text-2xl animate-bounce drop-shadow-md z-20">
               ✋
+           </div>
+        )}
+
+        {/* Live Reaction Particles */}
+        {p.reaction && (
+           <div className="absolute -top-12 text-4xl animate-ping drop-shadow-lg z-30 opacity-75">
+              {p.reaction}
            </div>
         )}
 

@@ -9,10 +9,12 @@ export const useStore = create((set) => ({
   chatMessages: [],
 
   activeSidebarTab: 'rooms',
+  isSidebarOpen: window.innerWidth >= 768,
   toasts: [],
   isLocked: false,
   timerEnd: null,
 
+  setIsSidebarOpen: (isOpen) => set({ isSidebarOpen: isOpen }),
   setZonesAndSeats: (zones, seats) => set({ zones, seats }),
   setLocalId: (id) => set({ localId: id }),
 
@@ -31,6 +33,19 @@ export const useStore = create((set) => ({
      if (!state.players[id]) return state;
      return { players: { ...state.players, [id]: { ...state.players[id], handRaised: isRaised } } }
   }),
+
+  setPlayerReaction: (id, emoji) => {
+     set(state => {
+        if (!state.players[id]) return state;
+        return { players: { ...state.players, [id]: { ...state.players[id], reaction: emoji } } }
+     });
+     setTimeout(() => {
+        set(state => {
+           if (!state.players[id]) return state;
+           return { players: { ...state.players, [id]: { ...state.players[id], reaction: null } } }
+        });
+     }, 3000);
+  },
 
   addChatMessage: (msg) => set(state => ({
      chatMessages: [...state.chatMessages, msg]

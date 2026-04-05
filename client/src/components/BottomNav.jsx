@@ -65,16 +65,28 @@ export const BottomNav = () => {
      else setTimer(5 * 60 * 1000); // 5 mins
   }
 
+  const [showReactions, setShowReactions] = useState(false);
+
+  const handleReaction = (emoji) => {
+     socket.emit('reaction', emoji);
+     setShowReactions(false);
+  };
+
+  const handleChatToggle = () => {
+     setActiveSidebarTab('chat');
+     useStore.getState().setIsSidebarOpen(true);
+  };
+
   const p = useStore(state => state.players[localId])
 
   return (
-    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-[#17171d] rounded-2xl shadow-2xl flex items-center p-2 z-50 text-white">
+    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-[#17171d] rounded-2xl shadow-2xl flex items-center p-2 z-50 text-white max-w-[95vw] overflow-x-auto hide-scrollbar">
        
        {/* Timer UI (if active) */}
        {timerEnd && <TimerDisplay timerEnd={timerEnd} />}
 
        {/* User Profile Popout */}
-       <div className="flex items-center gap-2 px-4 border-r border-zinc-700 cursor-pointer hover:bg-zinc-800 p-2 rounded-lg transition">
+       <div className="flex items-center gap-2 px-4 border-r border-zinc-700 cursor-pointer hover:bg-zinc-800 p-2 rounded-lg transition min-w-max">
           <div className="relative">
              <div className="w-8 h-8 rounded-full border border-zinc-600 bg-indigo-500 flex items-center justify-center font-bold text-xs">
                 {p && p.name ? p.name.substring(0,2).toUpperCase() : 'ME'}
@@ -88,30 +100,44 @@ export const BottomNav = () => {
        </div>
 
        {/* Controls */}
-       <div className="flex items-center gap-1 px-4 border-r border-zinc-700">
+       <div className="flex items-center gap-1 px-4 border-r border-zinc-700 min-w-max">
           <NavButton icon={isMuted ? 'Muted' : 'Mic'} label={isMuted ? "Unmute" : "Mute"} onClick={toggleMute} active={isMuted} />
           <NavButton icon={isVideoOff ? 'VideoOff' : 'Camera'} label={isVideoOff ? "Start" : "Stop"} onClick={toggleVideo} active={isVideoOff} />
           <NavButton icon="Share" label="Share" onClick={handleShare} />
        </div>
 
-       <div className="flex items-center gap-1 px-4 border-r border-zinc-700">
+       <div className="flex items-center gap-1 px-4 border-r border-zinc-700 min-w-max">
           <NavButton icon="Lock" label={isLocked ? "Unlock" : "Lock"} active={isLocked} onClick={toggleLock} />
           <NavButton icon="Invite" label="Invite" onClick={handleInvite} />
        </div>
 
-       <div className="flex items-center gap-1 px-4 border-r border-zinc-700">
-          <NavButton icon="Move" label="Move" onClick={() => addToast('Cursor movement is active')} />
+       <div className="flex items-center gap-1 px-4 border-r border-zinc-700 min-w-max relative">
+          <NavButton icon="Move" label="Move" onClick={() => addToast('Tap anywhere on the map to walk!')} />
           <NavButton icon="Hand" label="Hand" active={handRaised} onClick={toggleHand} />
-          <NavButton icon="React" label="React" onClick={() => addToast('Reactions coming in Phase 3!')} />
+          
+          <div className="relative">
+             <NavButton icon="React" label="React" onClick={() => setShowReactions(!showReactions)} active={showReactions} />
+             {/* Live Reaction Picker Dropdown */}
+             {showReactions && (
+               <div className="absolute -top-14 left-1/2 -translate-x-1/2 bg-zinc-800 rounded-xl px-3 py-2 flex gap-2 shadow-xl border border-zinc-700 z-50">
+                 {['👍', '❤️', '😂', '🎉'].map(emoji => (
+                   <button key={emoji} onClick={() => handleReaction(emoji)} className="text-2xl hover:scale-125 transition-transform">
+                      {emoji}
+                   </button>
+                 ))}
+               </div>
+             )}
+          </div>
+          
           <NavButton icon="Timer" label="Timer" active={!!timerEnd} onClick={toggleTimer} />
        </div>
 
-       <div className="flex items-center gap-1 px-4">
-          <NavButton icon="Chat" label="Chat" onClick={() => setActiveSidebarTab('chat')} />
+       <div className="flex items-center gap-1 px-4 min-w-max">
+          <NavButton icon="Chat" label="Chat" onClick={handleChatToggle} />
           <NavButton icon="Apps" label="Apps" onClick={() => addToast('Apps Marketplace coming soon.')} />
        </div>
 
-       <button className="ml-4 mr-2 !bg-red-500/20 hover:!bg-red-500/40 text-red-500 px-4 py-2 rounded-xl text-xs font-semibold transition-colors flex flex-col items-center gap-1">
+       <button className="ml-4 mr-2 !bg-red-500/20 hover:!bg-red-500/40 text-red-500 px-4 py-2 rounded-xl text-xs font-semibold transition-colors flex flex-col items-center gap-1 min-w-max">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
           Leave
        </button>

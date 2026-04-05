@@ -205,6 +205,13 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('reaction', (emoji) => {
+    const p = players.get(socket.id);
+    if (p) {
+       io.emit('reaction', { id: socket.id, emoji });
+    }
+  });
+
   socket.on('disconnect', () => {
     console.log(`[-] Player disconnected: ${socket.id}`);
     const p = players.get(socket.id);

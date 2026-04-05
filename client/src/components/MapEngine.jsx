@@ -49,15 +49,18 @@ export const MapEngine = () => {
            }
         }
 
-        // Apply movement
+        // Apply movement natively updating target instead of direct teleport
         if (dx !== 0 || dy !== 0) {
-          const newX = Math.max(20, Math.min(2000 - 20, localPlayer.x + dx));
-          const newY = Math.max(20, Math.min(2000 - 20, localPlayer.y + dy));
+          const pTargetX = localPlayer.targetX || localPlayer.x;
+          const pTargetY = localPlayer.targetY || localPlayer.y;
+          // When holding WASD, push the target coordinate ahead of you block by block
+          const newX = Math.max(20, Math.min(2000 - 20, pTargetX + dx));
+          const newY = Math.max(20, Math.min(2000 - 20, pTargetY + dy));
           
           const now = Date.now();
           if (now - lastEmitTime.current > 50) {
             lastEmitTime.current = now;
-            useStore.getState().setPlayerPos(state.localId, newX, newY);
+            useStore.getState().updatePlayerTarget(state.localId, newX, newY);
             socket.emit('move', { x: newX, y: newY });
           }
         }
@@ -106,13 +109,25 @@ export const MapEngine = () => {
         <div 
           ref={mapRef}
           className="absolute top-0 left-0"
+          onClick={(e) => {
+            const rect = mapRef.current.getBoundingClientRect();
+            // Compute real coordinates relative to the underlying 2000x2000 scaled grid
+            const worldX = (e.clientX - rect.left) / scale;
+            const worldY = (e.clientY - rect.top) / scale;
+            const newX = Math.max(20, Math.min(2000 - 20, worldX));
+            const newY = Math.max(20, Math.min(2000 - 20, worldY));
+            
+            useStore.getState().updatePlayerTarget(localId, newX, newY);
+            socket.emit('move', { x: newX, y: newY });
+          }}
           style={{ 
             width: '2000px', height: '2000px', 
             transform: `translate(${camera.x}px, ${camera.y}px)`,
             willChange: 'transform',
             backgroundImage: 'url(/office_map.png)',
             backgroundSize: 'cover',
-            backgroundPosition: 'center'
+            backgroundPosition: 'center',
+            cursor: 'crosshair'
           }}
         >
         {/* Render interactive seats (Chairs) */}
