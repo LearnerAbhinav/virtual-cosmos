@@ -164,10 +164,9 @@ export const MapEngine = () => {
         {seats.map(s => (
            <div 
              key={s.id} 
-             className="absolute bg-zinc-400 border border-zinc-500 rounded-md shadow-sm flex items-center justify-center text-[8px] text-white font-bold"
-             style={{ 
-               left: s.x - 15, top: s.y - 15, width: '30px', height: '30px'
-             }}
+             className="absolute bg-zinc-400 border border-zinc-500 rounded-md shadow-sm flex items-center justify-center text-[8px] text-white font-bold cursor-pointer hover:bg-indigo-400 transition-colors"
+             style={{ left: s.x - 15, top: s.y - 15, width: '30px', height: '30px' }}
+             onClick={() => socket.emit('interact')}
            >
              X
            </div>
@@ -178,6 +177,17 @@ export const MapEngine = () => {
           <PlayerAvatar key={id} id={id} />
         ))}
       </div>
+
+      {/* Floating Zoom Controls for Mobile */}
+      <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-30">
+        <button onClick={() => setScale(s => Math.min(3, s + 0.2))} className="w-10 h-10 bg-white rounded-full shadow-lg border border-zinc-200 flex items-center justify-center text-zinc-600 font-bold text-xl hover:bg-zinc-50 hover:scale-110 transition-transform">
+           +
+        </button>
+        <button onClick={() => setScale(s => Math.max(0.4, s - 0.2))} className="w-10 h-10 bg-white rounded-full shadow-lg border border-zinc-200 flex items-center justify-center text-zinc-600 font-bold text-xl hover:bg-zinc-50 hover:scale-110 transition-transform">
+           -
+        </button>
+      </div>
+
      </div>
     </div>
   );

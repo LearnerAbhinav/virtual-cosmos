@@ -71,7 +71,7 @@ io.on('connection', (socket) => {
   socket.emit('init', {
     id: socket.id,
     players: Array.from(players.values()).map(p => ({
-      id: p.id, x: p.x, y: p.y, color: p.color, seatId: p.seatId
+      id: p.id, x: p.x, y: p.y, color: p.color, seatId: p.seatId, name: p.name
     })),
     seats: SEATS,
     zones: ZONES
@@ -81,14 +81,14 @@ io.on('connection', (socket) => {
     socket.emit('init', {
       id: socket.id,
       players: Array.from(players.values()).map(p => ({
-        id: p.id, x: p.x, y: p.y, color: p.color, seatId: p.seatId
+        id: p.id, x: p.x, y: p.y, color: p.color, seatId: p.seatId, name: p.name
       })),
       seats: SEATS,
       zones: ZONES
     });
   });
 
-  socket.broadcast.emit('player_joined', { id: player.id, x: player.x, y: player.y, color: player.color });
+  socket.broadcast.emit('player_joined', { id: player.id, x: player.x, y: player.y, color: player.color, name: player.name });
 
   socket.on('interact', () => {
     const p = players.get(socket.id);
@@ -175,7 +175,7 @@ io.on('connection', (socket) => {
 
     // Calculate proximity constraints for packet delivery
     const currentZone = getZone(p.x, p.y);
-    const CHAT_RADIUS = 300;
+    const CHAT_RADIUS = 1000;
     
     players.forEach(otherPlayer => {
        const otherZone = getZone(otherPlayer.x, otherPlayer.y);
